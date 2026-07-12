@@ -18,16 +18,13 @@
   html,body{ scrollbar-width:none; -ms-overflow-style:none; }
   html::-webkit-scrollbar, body::-webkit-scrollbar{ display:none; width:0; height:0; }
   body{ background:#060a14; color:var(--text); overflow-x:hidden; -webkit-font-smoothing:antialiased; }
-
   .num{ font-family:'Manrope',sans-serif; }
 
-  /* film grain overlay */
   body::after{
     content:''; position:fixed; inset:0; z-index:999; pointer-events:none; opacity:0.035; mix-blend-mode:overlay;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
 
-  /* ================= SKY ================= */
   #sky{ position:fixed; inset:0; z-index:0; overflow:hidden; }
   #sky canvas{ position:absolute; inset:0; width:100%; height:100%; }
   .sky-gradient{ position:absolute; inset:0; transition:background 2.2s ease; }
@@ -41,18 +38,18 @@
   #bgVideoA,#bgVideoB{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 2.2s ease; }
   #bgVideoA.active,#bgVideoB.active{ opacity:1; }
   body.video-mode .sky-gradient,body.video-mode .sun-flare,body.video-mode .moon-glow{ opacity:0 !important; }
-  body.video-mode #bg-canvas{ opacity:0; transition:opacity 1s; }
 
-  /* ================= LAYOUT ================= */
   .app{ position:relative; z-index:2; max-width:520px; margin:0 auto; padding:22px 20px 90px; min-height:100vh; }
   .topbar{ display:flex; justify-content:space-between; align-items:center; opacity:0; animation:fadeDown .7s .1s forwards; }
   @keyframes fadeDown{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
-  .icon-btn{ width:40px;height:40px; border-radius:50%; background:var(--glass); border:1px solid var(--glass-border); backdrop-filter:blur(24px) saturate(180%); display:flex;align-items:center;justify-content:center; cursor:pointer; transition:.2s cubic-bezier(.34,1.56,.64,1); color:#fff; box-shadow:0 8px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12); }
+  .icon-btn{ position:relative; width:40px;height:40px; border-radius:50%; background:var(--glass); border:1px solid var(--glass-border); backdrop-filter:blur(24px) saturate(180%); display:flex;align-items:center;justify-content:center; cursor:pointer; transition:.2s cubic-bezier(.34,1.56,.64,1); color:#fff; box-shadow:0 8px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12); }
   .icon-btn:hover{ background:var(--glass-strong); transform:translateY(-2px); }
   .icon-btn:active{ transform:scale(0.9); }
   .icon-btn svg{ width:17px;height:17px; }
+  .icon-btn.sound-on{ color:var(--accent); box-shadow:0 0 0 2px rgba(125,211,252,0.4), 0 8px 20px rgba(0,0,0,0.25); }
+  .icon-btn.sound-on::after{ content:''; position:absolute; inset:-6px; border-radius:50%; border:1.5px solid rgba(125,211,252,0.5); animation:pulseRing 1.8s ease-out infinite; }
+  @keyframes pulseRing{0%{transform:scale(0.8);opacity:1;}100%{transform:scale(1.4);opacity:0;}}
 
-  /* HERO */
   .hero{ text-align:center; padding:38px 0 6px; }
   .hero .city{ font-family:'Manrope',sans-serif; font-size:26px; font-weight:600; letter-spacing:-0.3px; opacity:0; animation:fadeUp .8s .15s forwards; }
   .hero .cond{ font-size:14.5px; color:var(--sub); margin-top:5px; font-weight:500; letter-spacing:.2px; opacity:0; animation:fadeUp .8s .22s forwards; }
@@ -79,12 +76,18 @@
     border-radius:24px; padding:20px; margin-top:16px;
     box-shadow:0 20px 50px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1);
   }
-  .panel-title{ font-size:11.5px; color:var(--sub2); text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:7px; }
+  .panel-title{ font-size:11.5px; color:var(--sub2); text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; }
+  .pt-left{ display:flex; align-items:center; gap:7px; }
   .panel-title svg{ width:13px;height:13px; }
+  .drag-hint{ font-size:10px; color:var(--sub2); opacity:.65; display:flex; align-items:center; gap:4px; transition:opacity .4s; text-transform:none; letter-spacing:0; font-weight:600; }
+  .drag-hint.hide{ opacity:0; }
+  .drag-hint svg{ width:11px;height:11px; animation:swayX 1.4s ease-in-out infinite; }
+  @keyframes swayX{0%,100%{transform:translateX(0);}50%{transform:translateX(3px);}}
 
-  .hourly-scroll{ display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; }
+  .hourly-scroll{ display:flex; gap:4px; overflow-x:auto; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch; touch-action:pan-x; user-select:none; cursor:grab; scrollbar-width:none; }
   .hourly-scroll::-webkit-scrollbar{ display:none; }
-  .hour-item{ min-width:56px; text-align:center; padding:4px; flex-shrink:0; opacity:0; animation:fadeUp .5s forwards; }
+  .hourly-scroll.dragging{ cursor:grabbing; }
+  .hour-item{ min-width:56px; text-align:center; padding:4px; flex-shrink:0; opacity:0; animation:fadeUp .5s forwards; scroll-snap-align:center; pointer-events:none; }
   .hour-time{ font-size:11.5px; color:var(--sub); margin-bottom:10px; font-weight:500; }
   .hour-icon-box{ height:36px; display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
   .hour-rain{ font-size:10px; color:var(--accent); margin-bottom:6px; height:12px; font-weight:600; }
@@ -115,11 +118,16 @@
   .detail-main{ font-family:'Manrope',sans-serif; font-size:27px; font-weight:700; margin-top:4px; }
   .detail-sub{ font-size:11.5px; color:var(--sub); margin-top:2px; }
 
+  .live-badge{ display:inline-flex; align-items:center; gap:4px; font-size:9px; color:#86efac; font-weight:700; letter-spacing:.4px; text-transform:uppercase; margin-left:6px; }
+  .live-dot{ width:5px;height:5px; border-radius:50%; background:#4ade80; animation:livePulse 1.6s ease-in-out infinite; }
+  @keyframes livePulse{0%,100%{opacity:1; box-shadow:0 0 0 0 rgba(74,222,128,0.5);}50%{opacity:.5; box-shadow:0 0 0 4px rgba(74,222,128,0);}}
+
   .uv-bar{ height:6px; border-radius:6px; background:linear-gradient(90deg,#22c55e,#eab308,#f97316,#ef4444,#a855f7); margin-top:12px; position:relative; }
   .uv-dot{ position:absolute; top:-3px; width:12px;height:12px; border-radius:50%; background:#fff; box-shadow:0 0 8px rgba(0,0,0,0.5); transition:left 1s cubic-bezier(.16,1,.3,1); }
 
   .arc-wrap{ position:relative; width:100%; height:64px; margin-top:6px; }
   .arc-wrap svg{ width:100%; height:100%; overflow:visible; }
+  .sun-dot{ transition: cx 1.5s ease, cy 1.5s ease; }
 
   .compass{ width:72px; height:72px; margin:6px auto 0; position:relative; }
   .compass-ring{ width:100%; height:100%; border-radius:50%; border:1.5px solid rgba(255,255,255,0.18); position:relative; }
@@ -134,7 +142,6 @@
   .pressure-gauge{ position:relative; width:74px; height:42px; margin:6px auto 0; }
   .pressure-needle{ position:absolute; bottom:0; left:50%; width:2px; height:30px; background:#fff; transform-origin:bottom center; transform:translateX(-50%) rotate(0deg); transition:transform 1.2s cubic-bezier(.34,1.56,.64,1); }
 
-  /* ---- location / loader ---- */
   .center-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; position:relative; z-index:5; }
   .location-card{ width:100%; max-width:400px; text-align:center; background:var(--glass); border:1px solid transparent; backdrop-filter:blur(30px) saturate(190%); border-radius:28px; padding:38px 30px; animation:fadeUp .7s ease forwards; box-shadow:0 25px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1); }
   .location-card .globe-icon{ color:rgba(255,255,255,0.85); margin-bottom:16px; }
@@ -153,10 +160,9 @@
   .secondary-btn:active{ transform:scale(0.97); }
   .error-msg{ color:#fca5a5; font-size:12.5px; margin-top:10px; display:none; }
 
-  /* skeleton loader */
   .skeleton-wrap{ width:100%; max-width:420px; }
   .sk-line{ border-radius:12px; background:linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.11) 50%, rgba(255,255,255,0.04) 75%); background-size:200% 100%; animation:shimmer 1.6s ease-in-out infinite; }
-  @keyframes shimmer{ 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+  @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
   .sk-temp{ width:200px; height:110px; margin:20px auto; border-radius:24px; }
   .sk-city{ width:150px; height:22px; margin:0 auto 10px; }
   .sk-cond{ width:100px; height:14px; margin:0 auto 30px; }
@@ -166,7 +172,6 @@
 
   .hidden{ display:none !important; }
 
-  /* settings modal */
   .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(10px); z-index:20; display:flex; align-items:flex-end; justify-content:center; }
   .modal{ width:100%; max-width:520px; max-height:88vh; overflow-y:auto; background:rgba(12,16,26,0.94); border:1px solid var(--glass-border); border-radius:28px 28px 0 0; padding:26px 22px 36px; animation:slideUp .4s cubic-bezier(.16,1,.3,1); }
   @keyframes slideUp{from{transform:translateY(50px);opacity:0;}to{transform:translateY(0);opacity:1;}}
@@ -175,14 +180,16 @@
   .modal-header h3{ font-family:'Manrope',sans-serif; font-size:18px; font-weight:700; }
   .close-btn{ background:none; border:none; color:#fff; font-size:24px; cursor:pointer; opacity:.6; transition:.2s; }
   .close-btn:hover{ opacity:1; }
-  .tabs{ display:flex; gap:6px; margin-bottom:20px; background:rgba(255,255,255,0.04); padding:4px; border-radius:13px; }
-  .tab{ flex:1; text-align:center; padding:10px 4px; border-radius:10px; cursor:pointer; font-size:12px; font-weight:600; color:var(--sub); transition:.2s; }
+  .tabs{ display:flex; gap:6px; margin-bottom:20px; background:rgba(255,255,255,0.04); padding:4px; border-radius:13px; overflow-x:auto; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tab{ flex:1; min-width:70px; text-align:center; padding:10px 4px; border-radius:10px; cursor:pointer; font-size:12px; font-weight:600; color:var(--sub); transition:.2s; white-space:nowrap; }
   .tab.active{ background:rgba(255,255,255,0.14); color:#fff; }
   .tab-panel{ display:none; } .tab-panel.active{ display:block; animation:fd .3s ease; }
   @keyframes fd{from{opacity:0;}to{opacity:1;}}
   .radio-option{ display:flex; align-items:center; gap:12px; padding:14px; border-radius:14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); margin-bottom:9px; cursor:pointer; transition:.2s; }
   .radio-option.selected{ border-color:var(--accent); background:rgba(125,211,252,0.1); }
   .radio-option .r-icon{ width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .radio-option .r-text{ flex:1; }
   .radio-option .r-text b{ display:block; font-size:13.5px; font-weight:600; } .radio-option .r-text span{ font-size:11.5px; color:var(--sub); }
   .field-label{ font-size:11.5px; color:var(--sub2); margin:16px 0 7px; text-transform:uppercase; letter-spacing:.6px; font-weight:700; }
   .status-line{ font-size:12px; color:var(--sub); margin-top:9px; } .status-line.ok{ color:#86efac; } .status-line.err{ color:#fca5a5; }
@@ -194,6 +201,15 @@
   .upload-slot .upload-btn{ font-size:11px; padding:7px 11px; border-radius:9px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.14); color:#fff; cursor:pointer; display:inline-block; }
   .upload-slot .remove-btn{ position:absolute; top:7px; right:7px; background:rgba(239,68,68,0.9); border:none; color:#fff; width:20px;height:20px; border-radius:50%; font-size:11px; cursor:pointer; z-index:2; display:none; }
   .upload-slot.has-video .remove-btn{ display:block; }
+
+  .switch{ position:relative; width:42px; height:24px; flex-shrink:0; }
+  .switch input{ opacity:0; width:0; height:0; position:absolute; }
+  .switch-slider{ position:absolute; inset:0; background:rgba(255,255,255,0.2); border-radius:24px; transition:.3s; cursor:pointer; }
+  .switch-slider::before{ content:''; position:absolute; width:18px;height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.3s; }
+  .switch input:checked + .switch-slider{ background:linear-gradient(135deg,#3b9eff,#7c8fff); }
+  .switch input:checked + .switch-slider::before{ transform:translateX(18px); }
+  input[type=range]{ -webkit-appearance:none; width:100%; height:5px; border-radius:5px; background:rgba(255,255,255,0.15); outline:none; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:16px;height:16px; border-radius:50%; background:#fff; cursor:pointer; box-shadow:0 0 8px rgba(0,0,0,0.4); }
 
   @media(max-width:480px){ .hero .temp{ font-size:92px; } }
 </style>
@@ -231,9 +247,7 @@
     <div class="sk-line sk-city"></div>
     <div class="sk-line sk-cond"></div>
     <div class="sk-line sk-temp"></div>
-    <div class="sk-row">
-      <div class="sk-line sk-chip"></div><div class="sk-line sk-chip"></div><div class="sk-line sk-chip"></div>
-    </div>
+    <div class="sk-row"><div class="sk-line sk-chip"></div><div class="sk-line sk-chip"></div><div class="sk-line sk-chip"></div></div>
     <div class="sk-line sk-block"></div>
   </div>
 </div>
@@ -241,6 +255,7 @@
 <div class="app hidden" id="weatherView">
   <div class="topbar">
     <button class="icon-btn" id="changeLocBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.5-7-11a7 7 0 1114 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+    <button class="icon-btn" id="soundBtn" title="Ambient sound"></button>
     <button class="icon-btn" id="refreshBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 22v-6h6M3.51 9a9 9 0 0114.36-3.36L21 8M3 16l3.13 2.36A9 9 0 0020.49 15"/></svg></button>
     <button class="icon-btn" id="settingsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15.4 1.65 1.65 0 003.49 14H3.4a2 2 0 110-4h.09A1.65 1.65 0 005 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6 1.65 1.65 0 0010 3.09V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019 9c.36.11.71.28 1 .51H21a2 2 0 010 4h-.09c-.31.02-.6.13-.85.33z"/></svg></button>
   </div>
@@ -254,12 +269,15 @@
   </div>
 
   <div class="glass-panel reveal">
-    <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Hourly Forecast</div>
+    <div class="panel-title">
+      <span class="pt-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Hourly Forecast</span>
+      <span class="drag-hint" id="dragHint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6"/></svg>Swipe</span>
+    </div>
     <div class="hourly-scroll" id="hourlyScroll"></div>
   </div>
 
   <div class="glass-panel reveal">
-    <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>10-Day Forecast</div>
+    <div class="panel-title"><span class="pt-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>10-Day Forecast</span></div>
     <div id="dailyList"></div>
   </div>
 
@@ -274,14 +292,15 @@
       <div class="tab active" data-tab="source">Source</div>
       <div class="tab" data-tab="coverr">Coverr API</div>
       <div class="tab" data-tab="uploads">My Videos</div>
+      <div class="tab" data-tab="sound">Sound</div>
     </div>
     <div class="tab-panel active" id="tab-source">
       <label class="radio-option" data-value="canvas"><input type="radio" name="bgSource" value="canvas">
-        <div class="r-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21a9 9 0 110-18c4 0 8 2 8 6 0 2-1.5 3-3 3h-2a2 2 0 00-2 2c0 1 .5 1.5.5 2.5A2.5 2.5 0 0112 21z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg></div>
+        <div class="r-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21a9 9 0 110-18c4 0 8 2 8 6 0 2-1.5 3-3 3h-2a2 2 0 00-2 2c0 1 .5 1.5.5 2.5A2.5 2.5 0 0112 21z"/></svg></div>
         <div class="r-text"><b>Animated (Built-in)</b><span>Realistic canvas sky, zero downloads</span></div>
       </label>
       <label class="radio-option" data-value="coverr"><input type="radio" name="bgSource" value="coverr">
-        <div class="r-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/></svg></div>
+        <div class="r-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14"/></svg></div>
         <div class="r-text"><b>Coverr Videos</b><span>Fetches HD clips with your key · refreshes every 2 min</span></div>
       </label>
       <label class="radio-option" data-value="upload"><input type="radio" name="bgSource" value="upload">
@@ -299,12 +318,22 @@
       <div class="field-label">Upload a loop per condition</div>
       <div class="upload-grid" id="uploadGrid"></div>
     </div>
+    <div class="tab-panel" id="tab-sound">
+      <div class="radio-option" id="soundToggleRow" style="cursor:pointer;">
+        <div class="r-icon" id="soundRowIcon">🔊</div>
+        <div class="r-text"><b>Ambient Weather Sound</b><span>Procedurally generated audio synced to live conditions</span></div>
+        <label class="switch"><input type="checkbox" id="soundToggleCheckbox"><span class="switch-slider"></span></label>
+      </div>
+      <div class="field-label">Volume</div>
+      <input type="range" min="0" max="100" value="40" id="volumeSlider">
+      <div class="status-line" id="soundStatus">Sound is off.</div>
+    </div>
   </div>
 </div>
 
 <script>
 /* ============================================================
-   ICON SYSTEM — custom animated SVG weather icons
+   ICON SYSTEM
 ============================================================ */
 let __ic = 0;
 function weatherIcon(type, size=72){
@@ -361,7 +390,8 @@ function weatherIcon(type, size=72){
 ============================================================ */
 const SCENES = ['clear-day','clear-night','clouds-day','clouds-night','rain','thunderstorm','snow','fog'];
 const LABELS = {'clear-day':'Clear Day','clear-night':'Clear Night','clouds-day':'Cloudy Day','clouds-night':'Cloudy Night','rain':'Rain','thunderstorm':'Storm','snow':'Snow','fog':'Fog'};
-const QUERIES = {'clear-day':'sunny sky','clear-night':'starry night sky','clouds-day':'clouds timelapse','clouds-night':'night clouds','rain':'rain window','thunderstorm':'thunderstorm lightning','snow':'snow falling','fog':'foggy forest'};
+// Simplified single/double-word queries — Coverr returns more consistent results this way
+const QUERIES = {'clear-day':'clear sky','clear-night':'night sky','clouds-day':'clouds','clouds-night':'clouds','rain':'rain','thunderstorm':'storm','snow':'snow','fog':'fog'};
 const WMAP = {0:{d:"Clear",s:"clear"},1:{d:"Mostly Clear",s:"clear"},2:{d:"Partly Cloudy",s:"clouds"},3:{d:"Cloudy",s:"clouds"},45:{d:"Foggy",s:"fog"},48:{d:"Foggy",s:"fog"},51:{d:"Light Drizzle",s:"rain"},53:{d:"Drizzle",s:"rain"},55:{d:"Dense Drizzle",s:"rain"},61:{d:"Light Rain",s:"rain"},63:{d:"Rain",s:"rain"},65:{d:"Heavy Rain",s:"rain"},71:{d:"Light Snow",s:"snow"},73:{d:"Snow",s:"snow"},75:{d:"Heavy Snow",s:"snow"},80:{d:"Rain Showers",s:"rain"},81:{d:"Rain Showers",s:"rain"},82:{d:"Violent Showers",s:"thunderstorm"},95:{d:"Thunderstorm",s:"thunderstorm"},96:{d:"Storm + Hail",s:"thunderstorm"},99:{d:"Severe Storm",s:"thunderstorm"}};
 function wInfo(c){ return WMAP[c] || {d:"Unknown",s:"clear"}; }
 function sceneKey(s,day){ if(s==='clear') return day?'clear-day':'clear-night'; if(s==='clouds') return day?'clouds-day':'clouds-night'; return s; }
@@ -382,7 +412,7 @@ async function idbDel(k){ const d=await odb(); return new Promise(res=>{ const t
 async function loadCustomVideos(){ for(const k of SCENES){ const b=await idbGet(k); if(b) customVideos[k]=URL.createObjectURL(b); } buildUploadGrid(); }
 
 /* ============================================================
-   CANVAS SKY ANIMATION
+   CANVAS SKY
 ============================================================ */
 const canvas=document.getElementById('bg-canvas'), ctx=canvas.getContext('2d');
 let W,H,DPR=Math.min(devicePixelRatio||1,2);
@@ -454,7 +484,7 @@ function applySky(key){
 }
 
 /* ============================================================
-   VIDEO ENGINE — instant fallback + deterministic "first clip" logic
+   VIDEO ENGINE
 ============================================================ */
 const vidA=document.getElementById('bgVideoA'), vidB=document.getElementById('bgVideoB');
 const coverrPools={}; let coverrTimer=null; let currentKey=null;
@@ -467,8 +497,6 @@ function playVideo(src){
   standby.oncanplay=()=>{ standby.play().catch(()=>{}); standby.classList.add('active'); active.classList.remove('active'); };
   standby.onerror=()=>console.warn('video failed', src);
 }
-
-// Smaller payload (page_size:6) = much faster response.
 async function fetchCoverr(key){
   if(!settings.coverrApiKey) return [];
   try{
@@ -488,9 +516,9 @@ async function applyBackground(key){
   currentKey=key;
   clearInterval(coverrTimer);
   document.body.classList.remove('video-mode');
+  applySky(key); // instant, never a blank wait
 
-  // Show sky instantly — never a blank wait while video fetches.
-  applySky(key);
+  updateAmbientSound(key);
 
   if(settings.bgSource==='upload' && customVideos[key]){ playVideo(customVideos[key]); return; }
 
@@ -498,17 +526,195 @@ async function applyBackground(key){
     updateCoverrStatus('Fetching clip…','');
     const pool = await fetchCoverr(key);
     if(pool.length){
-      playVideo(pool[0]); // always the first result — deterministic, no random flicker
-      updateCoverrStatus(`✅ Playing clip for "${QUERIES[key]}" · refreshes every 2 min`, 'ok');
+      playVideo(pool[0]); // always first result — deterministic, no flicker
+      updateCoverrStatus(`✅ Playing "${QUERIES[key]}" · refreshes every 2 min`, 'ok');
     } else {
-      updateCoverrStatus('⚠️ No clips found — using animated sky instead.', 'err');
+      updateCoverrStatus('⚠️ No clips found — using animated sky.', 'err');
     }
     coverrTimer = setInterval(async ()=>{
       const fresh = await fetchCoverr(key);
-      if(fresh.length) playVideo(fresh[0]); // same rule on every refresh cycle
+      if(fresh.length) playVideo(fresh[0]);
     }, 2*60*1000);
   }
 }
+
+/* ============================================================
+   AMBIENT SOUND ENGINE (synthesized — no external audio files)
+============================================================ */
+let audioCtx=null, masterGain=null, activeNodes=[], rumbleTO=null;
+let soundEnabled = JSON.parse(localStorage.getItem('wxSoundEnabled')||'false');
+let savedVol = parseInt(localStorage.getItem('wxVolume')||'40');
+
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = (savedVol/100)*0.7;
+    masterGain.connect(audioCtx.destination);
+  }
+  if(audioCtx.state==='suspended') audioCtx.resume();
+}
+function createNoiseBuffer(duration=2){
+  const bufferSize = audioCtx.sampleRate * duration;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++) data[i]=Math.random()*2-1;
+  return buffer;
+}
+function noiseSource(){
+  const src=audioCtx.createBufferSource();
+  src.buffer=createNoiseBuffer(2);
+  src.loop=true;
+  return src;
+}
+function stopAmbient(){
+  clearTimeout(rumbleTO);
+  activeNodes.forEach(n=>{ try{n.stop&&n.stop();}catch(e){} try{n.disconnect&&n.disconnect();}catch(e){} });
+  activeNodes=[];
+}
+function playRain(intensity=1){
+  const src=noiseSource();
+  const bp=audioCtx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1600; bp.Q.value=0.6;
+  const gain=audioCtx.createGain(); gain.gain.value=0.35*intensity;
+  src.connect(bp).connect(gain).connect(masterGain); src.start();
+  const lfo=audioCtx.createOscillator(); lfo.frequency.value=0.15;
+  const lfoGain=audioCtx.createGain(); lfoGain.gain.value=250;
+  lfo.connect(lfoGain).connect(bp.frequency); lfo.start();
+  activeNodes.push(src,bp,gain,lfo,lfoGain);
+}
+function scheduleRumble(){
+  rumbleTO=setTimeout(()=>{
+    if(!soundEnabled) return;
+    const osc=audioCtx.createOscillator(); osc.type='sine'; osc.frequency.value=55+Math.random()*30;
+    const g=audioCtx.createGain(); g.gain.value=0;
+    osc.connect(g).connect(masterGain); osc.start();
+    const now=audioCtx.currentTime;
+    g.gain.linearRampToValueAtTime(0.5, now+0.3);
+    g.gain.exponentialRampToValueAtTime(0.001, now+2.5);
+    osc.stop(now+2.6);
+    activeNodes.push(osc,g);
+    scheduleRumble();
+  }, 8000+Math.random()*12000);
+}
+function playThunder(){ playRain(1.2); scheduleRumble(); }
+function playWind(intensity=0.5){
+  const src=noiseSource();
+  const lp=audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=500;
+  const gain=audioCtx.createGain(); gain.gain.value=0.25*intensity;
+  src.connect(lp).connect(gain).connect(masterGain); src.start();
+  const lfo=audioCtx.createOscillator(); lfo.frequency.value=0.08;
+  const lfoGain=audioCtx.createGain(); lfoGain.gain.value=300;
+  lfo.connect(lfoGain).connect(lp.frequency); lfo.start();
+  activeNodes.push(src,lp,gain,lfo,lfoGain);
+}
+function updateAmbientSound(key){
+  if(!soundEnabled || !audioCtx) return;
+  stopAmbient();
+  if(key==='rain') playRain(1);
+  else if(key==='thunderstorm') playThunder();
+  else if(key==='snow') playWind(0.22);
+  else if(key==='fog') playWind(0.32);
+  else if(key.startsWith('clouds')) playWind(0.4);
+  // clear-day / clear-night = silence
+}
+function toggleSound(){
+  soundEnabled=!soundEnabled;
+  localStorage.setItem('wxSoundEnabled', JSON.stringify(soundEnabled));
+  if(soundEnabled){ ensureAudio(); if(currentKey) updateAmbientSound(currentKey); }
+  else { stopAmbient(); }
+  syncSoundUI();
+}
+function syncSoundUI(){
+  const btn=document.getElementById('soundBtn');
+  btn.classList.toggle('sound-on', soundEnabled);
+  btn.innerHTML = soundEnabled
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M19 5a10 10 0 010 14"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>`;
+  const cb=document.getElementById('soundToggleCheckbox');
+  if(cb) cb.checked=soundEnabled;
+  const status=document.getElementById('soundStatus');
+  if(status) status.textContent = soundEnabled ? '🔊 Ambient sound is on, synced to live weather.' : 'Sound is off.';
+}
+// unlock audio on first user gesture anywhere (covers persisted "on" preference)
+document.addEventListener('click', function unlockAudioOnce(){
+  if(soundEnabled){ ensureAudio(); if(currentKey) updateAmbientSound(currentKey); }
+  document.removeEventListener('click', unlockAudioOnce);
+}, {once:true});
+
+/* ============================================================
+   SWIPEABLE HOURLY SCROLL — momentum for mouse, native for touch
+============================================================ */
+function makeSwipable(el){
+  let isDown=false, startX=0, scrollStart=0, lastX=0, lastT=0, velocity=0, raf=null;
+
+  el.addEventListener('pointerdown', e=>{
+    if(e.pointerType==='touch') return; // let native touch scrolling + snap handle mobile
+    isDown=true; el.classList.add('dragging');
+    el.setPointerCapture(e.pointerId);
+    startX=e.clientX; scrollStart=el.scrollLeft; lastX=e.clientX; lastT=performance.now();
+    velocity=0; cancelAnimationFrame(raf);
+    el.style.scrollSnapType='none';
+  });
+  el.addEventListener('pointermove', e=>{
+    if(!isDown) return;
+    const dx=e.clientX-startX;
+    el.scrollLeft = scrollStart - dx;
+    const now=performance.now(); const dt=now-lastT;
+    if(dt>0) velocity=(e.clientX-lastX)/dt;
+    lastX=e.clientX; lastT=now;
+  });
+  function endDrag(){
+    if(!isDown) return;
+    isDown=false; el.classList.remove('dragging');
+    let vel=-velocity*16;
+    function step(){
+      if(Math.abs(vel)<0.4){ el.style.scrollSnapType='x proximity'; return; }
+      el.scrollLeft+=vel; vel*=0.94;
+      raf=requestAnimationFrame(step);
+    }
+    step();
+  }
+  el.addEventListener('pointerup', endDrag);
+  el.addEventListener('pointercancel', endDrag);
+  el.addEventListener('pointerleave', ()=>{ if(isDown) endDrag(); });
+
+  // trackpad/mouse wheel → horizontal scroll
+  el.addEventListener('wheel', e=>{
+    if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+      el.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+  }, {passive:false});
+
+  // hide the "swipe" hint after first interaction
+  const hideHint=()=>{ const h=document.getElementById('dragHint'); if(h) h.classList.add('hide'); };
+  el.addEventListener('pointerdown', hideHint, {once:true});
+  el.addEventListener('wheel', hideHint, {once:true});
+  el.addEventListener('touchstart', hideHint, {once:true, passive:true});
+}
+
+/* ============================================================
+   LIVE SUN-POSITION DOT — recalculated every 60s
+============================================================ */
+let sunTimesGlobal = null;
+const SUN_P0={x:5,y:45}, SUN_P1={x:50,y:-15}, SUN_P2={x:95,y:45};
+function bezierPoint(t,p0,p1,p2){
+  const x=(1-t)*(1-t)*p0.x + 2*(1-t)*t*p1.x + t*t*p2.x;
+  const y=(1-t)*(1-t)*p0.y + 2*(1-t)*t*p1.y + t*t*p2.y;
+  return {x,y};
+}
+function updateSunDot(){
+  if(!sunTimesGlobal) return;
+  const dot=document.getElementById('sunDot');
+  if(!dot) return;
+  const now=new Date();
+  let pct=(now - sunTimesGlobal.sunrise) / (sunTimesGlobal.sunset - sunTimesGlobal.sunrise);
+  pct=Math.max(0,Math.min(1,pct));
+  const pt=bezierPoint(pct, SUN_P0, SUN_P1, SUN_P2);
+  dot.style.setProperty('cx', pt.x);
+  dot.style.setProperty('cy', pt.y);
+}
+setInterval(updateSunDot, 60*1000); // live update every minute, forever
 
 /* ============================================================
    LOCATION
@@ -521,7 +727,6 @@ async function reverseGeocode(lat,lon){
 document.getElementById('useLocationBtn').onclick=()=>{
   document.getElementById('locationError').style.display='none';
   if(!navigator.geolocation){ showErr('Geolocation not supported. Search manually.'); return; }
-  document.getElementById('useLocationBtn').querySelector('svg').style.opacity=0.4;
   navigator.geolocation.getCurrentPosition(async pos=>{
     const {latitude,longitude}=pos.coords;
     const p=await reverseGeocode(latitude,longitude);
@@ -566,7 +771,6 @@ function animateNum(el, to){
     el.textContent = Math.round(to*eased)+'°'; if(p<1) requestAnimationFrame(step); }
   requestAnimationFrame(step);
 }
-
 function addTilt(el, max=7){
   if(!matchMedia('(hover:hover)').matches) return;
   el.addEventListener('mousemove', e=>{
@@ -594,11 +798,13 @@ function buildDetailCards(cur, daily, uvNow, visNow){
 
   grid.innerHTML += `<div class="detail-card"><div><div class="detail-label">${ICON.sun}UV Index</div><div class="detail-main num">${Math.round(uvNow)}</div><div class="detail-sub">${uvLabel}</div></div><div class="uv-bar"><div class="uv-dot" style="left:calc(${uvPct}% - 6px)"></div></div></div>`;
 
-  const sunrise=new Date(daily.sunrise[0]), sunset=new Date(daily.sunset[0]), now=new Date();
-  let pct=(now-sunrise)/(sunset-sunrise); pct=Math.max(0,Math.min(1,pct));
-  const isDayNow = now>sunrise && now<sunset;
-  grid.innerHTML += `<div class="detail-card"><div><div class="detail-label">${isDayNow?'Sunset':'Sunrise'}</div><div class="detail-main num" style="font-size:19px;">${isDayNow?fmtTime(daily.sunset[0]):fmtTime(daily.sunrise[0])}</div><div class="detail-sub">${isDayNow?'Sunrise':'Sunset'}: ${isDayNow?fmtTime(daily.sunrise[0]):fmtTime(daily.sunset[0])}</div></div>
-    <div class="arc-wrap"><svg viewBox="0 0 100 50"><path d="M5,45 Q50,-15 95,45" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="2"/><circle r="4" fill="#fbbf24"><animateMotion dur="0.1s" fill="freeze" keyPoints="${pct};${pct}" keyTimes="0;1" path="M5,45 Q50,-15 95,45"/></circle></svg></div></div>`;
+  sunTimesGlobal = { sunrise: new Date(daily.sunrise[0]), sunset: new Date(daily.sunset[0]) };
+  const now=new Date();
+  let pct=(now - sunTimesGlobal.sunrise)/(sunTimesGlobal.sunset - sunTimesGlobal.sunrise); pct=Math.max(0,Math.min(1,pct));
+  const isDayNow = now>sunTimesGlobal.sunrise && now<sunTimesGlobal.sunset;
+  const initPt = bezierPoint(pct, SUN_P0, SUN_P1, SUN_P2);
+  grid.innerHTML += `<div class="detail-card"><div><div class="detail-label">${isDayNow?'Sunset':'Sunrise'}<span class="live-badge"><span class="live-dot"></span>live</span></div><div class="detail-main num" style="font-size:19px;">${isDayNow?fmtTime(daily.sunset[0]):fmtTime(daily.sunrise[0])}</div><div class="detail-sub">${isDayNow?'Sunrise':'Sunset'}: ${isDayNow?fmtTime(daily.sunrise[0]):fmtTime(daily.sunset[0])}</div></div>
+    <div class="arc-wrap"><svg viewBox="0 0 100 50"><path d="M5,45 Q50,-15 95,45" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="2"/><circle id="sunDot" class="sun-dot" cx="${initPt.x}" cy="${initPt.y}" r="4" fill="#fbbf24"/></svg></div></div>`;
 
   grid.innerHTML += `<div class="detail-card"><div><div class="detail-label">${ICON.wind}Wind</div><div class="detail-main num">${Math.round(cur.wind_speed_10m)} <span style="font-size:13px;">km/h</span></div></div>
     <div class="compass"><div class="compass-ring">
@@ -620,6 +826,7 @@ function buildDetailCards(cur, daily, uvNow, visNow){
   requestAnimationFrame(()=>{
     document.getElementById('windArrow').style.transform=`translate(-50%,-100%) rotate(${cur.wind_direction_10m}deg)`;
     document.getElementById('pressNeedle').style.transform=`translateX(-50%) rotate(${-90+pPct*180}deg)`;
+    updateSunDot();
   });
   document.querySelectorAll('.detail-card').forEach((c,i)=>{ setTimeout(()=>c.classList.add('in'), 70*i); addTilt(c); });
 }
@@ -704,12 +911,12 @@ async function loadWeather(){
    SETTINGS
 ============================================================ */
 function initSettingsUI(){
-  document.querySelectorAll('.radio-option').forEach(opt=>{
+  document.querySelectorAll('.radio-option[data-value]').forEach(opt=>{
     opt.querySelector('input').checked = opt.dataset.value===settings.bgSource;
     opt.classList.toggle('selected', opt.dataset.value===settings.bgSource);
     opt.onclick=()=>{
       settings.bgSource=opt.dataset.value; saveSettings();
-      document.querySelectorAll('.radio-option').forEach(o=>{ o.classList.toggle('selected', o.dataset.value===settings.bgSource); o.querySelector('input').checked=o.dataset.value===settings.bgSource; });
+      document.querySelectorAll('.radio-option[data-value]').forEach(o=>{ o.classList.toggle('selected', o.dataset.value===settings.bgSource); o.querySelector('input').checked=o.dataset.value===settings.bgSource; });
       if(currentKey) applyBackground(currentKey);
     };
   });
@@ -727,6 +934,24 @@ function initSettingsUI(){
       tab.classList.add('active'); document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
     };
   });
+
+  // sound tab wiring
+  const soundCb=document.getElementById('soundToggleCheckbox');
+  soundCb.checked=soundEnabled;
+  soundCb.addEventListener('change', toggleSound);
+  document.getElementById('soundToggleRow').addEventListener('click', e=>{
+    if(e.target.tagName==='INPUT') return;
+    soundCb.checked = !soundCb.checked;
+    toggleSound();
+  });
+  const volSlider=document.getElementById('volumeSlider');
+  volSlider.value=savedVol;
+  volSlider.addEventListener('input', e=>{
+    savedVol=parseInt(e.target.value);
+    localStorage.setItem('wxVolume', savedVol);
+    if(masterGain) masterGain.gain.value=(savedVol/100)*0.7;
+  });
+  syncSoundUI();
 }
 function buildUploadGrid(){
   const grid=document.getElementById('uploadGrid'); grid.innerHTML='';
@@ -759,6 +984,7 @@ document.getElementById('settingsBtn').onclick=()=>document.getElementById('sett
 document.getElementById('closeSettings').onclick=()=>document.getElementById('settingsModal').classList.add('hidden');
 document.getElementById('settingsModal').onclick=e=>{ if(e.target.id==='settingsModal') e.currentTarget.classList.add('hidden'); };
 document.getElementById('refreshBtn').onclick=loadWeather;
+document.getElementById('soundBtn').onclick=toggleSound;
 
 /* ============================================================
    STARTUP
@@ -767,10 +993,11 @@ async function startApp(){
   document.getElementById('locationScreen').classList.add('hidden');
   await loadCustomVideos();
   initSettingsUI();
+  makeSwipable(document.getElementById('hourlyScroll'));
   await loadWeather();
   setInterval(loadWeather, 10*60*1000);
 }
-window.addEventListener('DOMContentLoaded', ()=>{ if(loc && loc.lat) startApp(); });
+window.addEventListener('DOMContentLoaded', ()=>{ syncSoundUI(); if(loc && loc.lat) startApp(); });
 </script>
 </body>
 </html>
