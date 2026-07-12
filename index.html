@@ -1,68 +1,721 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aesthetic Weather</title>
-<link rel="stylesheet" href="style.css">
+<title>Weather | Cinematic</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --glass: rgba(255,255,255,0.09); --glass-border: rgba(255,255,255,0.18); --text:#f5f7fa; --sub: rgba(255,255,255,0.68); --accent:#7dd3fc; }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+  html,body{height:100%;}
+  body{
+    min-height:100vh; color:var(--text); background:#0f2027;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    overflow:hidden; position:relative;
+  }
+  .orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.3;z-index:0;animation:float 12s ease-in-out infinite;}
+  .orb1{width:320px;height:320px;background:#38bdf8;top:-100px;left:-100px;}
+  .orb2{width:280px;height:280px;background:#a78bfa;bottom:-90px;right:-90px;animation-delay:3s;}
+  @keyframes float{0%,100%{transform:translateY(0) translateX(0);}50%{transform:translateY(-30px) translateX(20px);}}
+
+  /* ---------- VIDEO BG ---------- */
+  .bg-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.8s ease;z-index:0;filter:brightness(0.72) saturate(1.1);}
+  .bg-video.active{opacity:1;}
+  .video-overlay{position:fixed;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.55) 100%);}
+  #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;display:none;}
+  body.video-fallback #bg-canvas{display:block;}
+  body.video-fallback .bg-video{opacity:0 !important;}
+
+  /* ---------- GLASS CARD ---------- */
+  .card{
+    position:relative; z-index:2; width:100%; max-width:420px;
+    background:var(--glass); border:1px solid var(--glass-border);
+    backdrop-filter: blur(26px) saturate(180%); -webkit-backdrop-filter: blur(26px) saturate(180%);
+    border-radius:28px; padding:32px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+    animation: cardIn .9s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes cardIn{from{opacity:0; transform:translateY(30px) scale(.96);}to{opacity:1; transform:translateY(0) scale(1);}}
+
+  .top-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .city{font-size:22px; font-weight:700; letter-spacing:-0.3px;}
+  .city span{display:block; font-size:13px; font-weight:400; color:var(--sub); margin-top:2px;}
+  .btn-row{display:flex; gap:8px;}
+  .icon-btn{
+    background:rgba(255,255,255,0.1); border:1px solid var(--glass-border); color:var(--text);
+    width:38px;height:38px; border-radius:12px; cursor:pointer;
+    display:flex;align-items:center;justify-content:center; transition:.25s;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.22);}
+  .icon-btn svg{width:18px;height:18px;}
+  #refreshBtn:hover{transform:rotate(90deg);}
+
+  .main-weather{display:flex; align-items:center; justify-content:space-between; margin:28px 0 8px;}
+  .temp{font-size:76px; font-weight:800; line-height:1; letter-spacing:-3px; background:linear-gradient(180deg,#fff,#c7d5e0); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .weather-icon{font-size:68px; filter: drop-shadow(0 10px 24px rgba(0,0,0,0.4));}
+  .desc{font-size:16px; color:var(--sub); margin-bottom:2px;}
+  .feels{font-size:13px; color:var(--sub);}
+
+  .stats-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:26px;}
+  .stat{background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:14px 10px; text-align:center; transition:.25s;}
+  .stat:hover{background:rgba(255,255,255,0.15); transform:translateY(-2px);}
+  .stat-icon{font-size:20px; margin-bottom:6px;}
+  .stat-val{font-size:16px; font-weight:700;}
+  .stat-label{font-size:10.5px; color:var(--sub); margin-top:2px; text-transform:uppercase; letter-spacing:.5px;}
+
+  .hourly{margin-top:26px;}
+  .section-title{font-size:13px; color:var(--sub); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; font-weight:600;}
+  .hourly-scroll{display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none;}
+  .hourly-scroll::-webkit-scrollbar{display:none;}
+  .hour-item{min-width:62px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:12px 8px; text-align:center; flex-shrink:0;}
+  .hour-time{font-size:11px; color:var(--sub); margin-bottom:6px;}
+  .hour-icon{font-size:20px; margin-bottom:6px;}
+  .hour-temp{font-size:13px; font-weight:600;}
+
+  .updated{text-align:center; font-size:11px; color:var(--sub); margin-top:22px; opacity:.7;}
+  .loader{display:flex; flex-direction:column; align-items:center; justify-content:center; height:280px; font-size:14px; color:var(--sub); gap:14px;}
+  .spinner{width:22px;height:22px; border:2px solid rgba(255,255,255,0.2); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .hidden{display:none !important;}
+
+  .video-badge{position:fixed; bottom:14px; left:14px; z-index:3; font-size:10.5px; color:rgba(255,255,255,0.55); letter-spacing:.5px;}
+
+  /* ---------- LOCATION SCREEN ---------- */
+  .location-card{ text-align:center; }
+  .location-card .big-emoji{font-size:54px; margin-bottom:14px;}
+  .location-card h2{font-size:22px; margin-bottom:8px;}
+  .location-card p{font-size:13.5px; color:var(--sub); margin-bottom:24px; line-height:1.5;}
+  .primary-btn{
+    width:100%; padding:14px; border:none; border-radius:14px; cursor:pointer;
+    background:linear-gradient(135deg,#38bdf8,#818cf8); color:#fff; font-weight:600; font-size:14.5px;
+    transition:.25s; margin-bottom:12px;
+  }
+  .primary-btn:hover{transform:translateY(-2px); box-shadow:0 10px 25px rgba(56,189,248,0.35);}
+  .divider{display:flex; align-items:center; gap:10px; margin:16px 0; color:var(--sub); font-size:12px;}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.15);}
+  .text-input{
+    width:100%; padding:13px 14px; border-radius:12px; border:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.07); color:var(--text); font-size:14px; margin-bottom:10px;
+    outline:none;
+  }
+  .text-input::placeholder{color:rgba(255,255,255,0.4);}
+  .secondary-btn{
+    width:100%; padding:13px; border-radius:12px; cursor:pointer; font-weight:600; font-size:13.5px;
+    background:rgba(255,255,255,0.08); border:1px solid var(--glass-border); color:var(--text); transition:.25s;
+  }
+  .secondary-btn:hover{background:rgba(255,255,255,0.16);}
+  .error-msg{color:#fca5a5; font-size:12.5px; margin-top:10px; display:none;}
+
+  /* ---------- SETTINGS MODAL ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px);
+    z-index:10; display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal{
+    width:100%; max-width:480px; max-height:85vh; overflow-y:auto;
+    background:rgba(20,25,35,0.9); border:1px solid var(--glass-border);
+    border-radius:24px; padding:26px; animation:cardIn .4s ease;
+  }
+  .modal::-webkit-scrollbar{width:6px;}
+  .modal::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15); border-radius:10px;}
+  .modal-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
+  .modal-header h3{font-size:18px;}
+  .close-btn{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;opacity:.7;}
+  .close-btn:hover{opacity:1;}
+
+  .tabs{display:flex; gap:6px; margin-bottom:20px; background:rgba(255,255,255,0.05); padding:4px; border-radius:12px;}
+  .tab{flex:1; text-align:center; padding:9px; border-radius:9px; cursor:pointer; font-size:12.5px; font-weight:600; color:var(--sub); transition:.2s;}
+  .tab.active{background:rgba(255,255,255,0.15); color:#fff;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block; animation:fadeIn .3s ease;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+  .radio-option{
+    display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); margin-bottom:8px; cursor:pointer; transition:.2s;
+  }
+  .radio-option:hover{background:rgba(255,255,255,0.1);}
+  .radio-option.selected{border-color:var(--accent); background:rgba(125,211,252,0.12);}
+  .radio-option input{accent-color:var(--accent);}
+  .radio-option .r-text b{display:block;font-size:13.5px;}
+  .radio-option .r-text span{font-size:11.5px;color:var(--sub);}
+
+  .field-label{font-size:12px; color:var(--sub); margin:14px 0 6px; text-transform:uppercase; letter-spacing:.5px; font-weight:600;}
+  .status-line{font-size:12px; color:var(--sub); margin-top:8px;}
+  .status-line.ok{color:#86efac;}
+  .status-line.err{color:#fca5a5;}
+
+  .upload-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;}
+  .upload-slot{
+    background:rgba(255,255,255,0.06); border:1px dashed rgba(255,255,255,0.25);
+    border-radius:14px; padding:10px; text-align:center; position:relative; overflow:hidden;
+  }
+  .upload-slot video{width:100%;height:70px;object-fit:cover;border-radius:8px;margin-bottom:6px;background:#000;}
+  .upload-slot .slot-label{font-size:11px; font-weight:600; margin-bottom:6px;}
+  .upload-slot input[type=file]{
+    position:absolute; inset:0; opacity:0; cursor:pointer;
+  }
+  .upload-slot .upload-btn{
+    font-size:11px; padding:6px 10px; border-radius:8px; background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.15); color:#fff; cursor:pointer; display:inline-block;
+  }
+  .upload-slot .remove-btn{
+    position:absolute; top:6px; right:6px; background:rgba(239,68,68,0.85); border:none; color:#fff;
+    width:20px;height:20px;border-radius:50%; font-size:11px; cursor:pointer; z-index:2; display:none;
+  }
+  .upload-slot.has-video .remove-btn{display:block;}
+
+  @media(max-width:480px){ .temp{font-size:60px;} .weather-icon{font-size:52px;} .upload-grid{grid-template-columns:1fr;} }
+</style>
 </head>
 <body>
 
-<!-- Location Screen -->
-<div id="locationScreen" class="center-screen">
-    <h1>Welcome</h1>
-    <button onclick="requestLocation()">Allow Location</button>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<video id="bgVideoA" class="bg-video active" muted loop autoplay playsinline></video>
+<video id="bgVideoB" class="bg-video" muted loop autoplay playsinline></video>
+<div class="video-overlay"></div>
+<canvas id="bg-canvas"></canvas>
+<div class="video-badge" id="videoBadge"></div>
+
+<!-- ============ SCREEN 1: LOCATION PROMPT ============ -->
+<div class="card location-card" id="locationScreen">
+  <div class="big-emoji">🌍</div>
+  <h2>Where are you?</h2>
+  <p>We need your location to show live, accurate weather. This stays on your device — nothing is sent anywhere except the free weather API.</p>
+  <button class="primary-btn" id="useLocationBtn">📍 Use My Current Location</button>
+  <div class="divider">OR</div>
+  <input type="text" class="text-input" id="manualCityInput" placeholder="Enter a city name (e.g. Paris)">
+  <button class="secondary-btn" id="manualCityBtn">Search City</button>
+  <div class="error-msg" id="locationError"></div>
 </div>
 
-<!-- Main App -->
-<div id="app" class="hidden">
-
-    <video autoplay muted loop id="bgVideo"></video>
-    <div class="overlay"></div>
-
-    <div class="weather-ui">
-        <h1 id="city"></h1>
-        <h2 id="temp"></h2>
-        <p id="condition"></p>
-    </div>
-
-    <button id="settingsBtn" onclick="toggleSettings()">⚙️</button>
-
-    <div id="settingsPanel" class="settings hidden">
-        <h3>Settings</h3>
-
-        <label>Clovverr API Key</label>
-        <input type="text" id="apiKeyInput">
-        <button onclick="saveApiKey()">Save API Key</button>
-
-        <hr>
-
-        <label>Upload Custom Video</label>
-        <select id="weatherTypeSelect">
-            <option value="clear">Clear</option>
-            <option value="rain">Rain</option>
-            <option value="snow">Snow</option>
-            <option value="clouds">Clouds</option>
-            <option value="thunder">Thunder</option>
-        </select>
-        <input type="file" id="videoUpload" accept="video/*">
-        <button onclick="saveCustomVideo()">Save Video</button>
-
-        <hr>
-
-        <label>
-            <input type="checkbox" id="useCustom">
-            Use Custom Videos
-        </label>
-
-        <label>
-            <input type="checkbox" id="useApi">
-            Use Clovverr API
-        </label>
-
-    </div>
-
+<!-- ============ SCREEN 2: LOADER ============ -->
+<div class="card hidden" id="loaderCard">
+  <div class="loader">
+    <div class="spinner"></div>
+    <span>Fetching live weather…</span>
+  </div>
 </div>
 
-<script src="script.js"></script>
+<!-- ============ SCREEN 3: WEATHER DASHBOARD ============ -->
+<div class="card hidden" id="weatherView">
+  <div class="top-row">
+    <div class="city"><span id="cityName">--</span><span id="dateNow"></span></div>
+    <div class="btn-row">
+      <button class="icon-btn" id="settingsBtn" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15.4 1.65 1.65 0 003.49 14H3.4a2 2 0 110-4h.09A1.65 1.65 0 005 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6 1.65 1.65 0 0010 3.09V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019 9c.36.11.71.28 1 .51H21a2 2 0 010 4h-.09c-.31.02-.6.13-.85.33z"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" title="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 2v6h-6M3 22v-6h6M3.51 9a9 9 0 0114.36-3.36L21 8M3 16l3.13 2.36A9 9 0 0020.49 15"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="main-weather">
+    <div class="temp" id="temp">--°</div>
+    <div class="weather-icon" id="weatherIcon">☀️</div>
+  </div>
+  <div class="desc" id="weatherDesc">--</div>
+  <div class="feels" id="feelsLike">Feels like --°</div>
+
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-icon">💧</div><div class="stat-val" id="humidity">--%</div><div class="stat-label">Humidity</div></div>
+    <div class="stat"><div class="stat-icon">💨</div><div class="stat-val" id="wind">-- km/h</div><div class="stat-label">Wind</div></div>
+    <div class="stat"><div class="stat-icon">🌡️</div><div class="stat-val" id="pressure">-- hPa</div><div class="stat-label">Pressure</div></div>
+  </div>
+
+  <div class="hourly">
+    <div class="section-title">Today's Forecast</div>
+    <div class="hourly-scroll" id="hourlyScroll"></div>
+  </div>
+  <div class="updated" id="updatedAt"></div>
+</div>
+
+<!-- ============ SETTINGS MODAL ============ -->
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚙️ Configuration</h3>
+      <button class="close-btn" id="closeSettings">&times;</button>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="source">Source</div>
+      <div class="tab" data-tab="coverr">Coverr API</div>
+      <div class="tab" data-tab="uploads">My Videos</div>
+      <div class="tab" data-tab="location">Location</div>
+    </div>
+
+    <!-- Tab: Background Source -->
+    <div class="tab-panel active" id="tab-source">
+      <div class="field-label">Choose background style</div>
+      <label class="radio-option" data-value="canvas">
+        <input type="radio" name="bgSource" value="canvas">
+        <div class="r-text"><b>🎨 Animated (built-in)</b><span>Lightweight canvas animation, no downloads</span></div>
+      </label>
+      <label class="radio-option" data-value="coverr">
+        <input type="radio" name="bgSource" value="coverr">
+        <div class="r-text"><b>🎬 Coverr Videos</b><span>Auto-fetches HD clips using your API key, refreshes every 2 min</span></div>
+      </label>
+      <label class="radio-option" data-value="upload">
+        <input type="radio" name="bgSource" value="upload">
+        <div class="r-text"><b>📤 My Uploaded Videos</b><span>Use your own video loops per weather type</span></div>
+      </label>
+    </div>
+
+    <!-- Tab: Coverr -->
+    <div class="tab-panel" id="tab-coverr">
+      <div class="field-label">Your Coverr API Key</div>
+      <input type="text" class="text-input" id="coverrKeyInput" placeholder="Paste your Coverr API key">
+      <button class="secondary-btn" id="saveCoverrKey">Save Key</button>
+      <div class="status-line" id="coverrStatus">No key saved yet.</div>
+      <div class="field-label">Refresh Interval</div>
+      <div class="status-line">Fixed at every 2 minutes — fetches a fresh clip per current weather condition automatically.</div>
+    </div>
+
+    <!-- Tab: Uploads -->
+    <div class="tab-panel" id="tab-uploads">
+      <div class="field-label">Upload a loop video for each condition (mp4, ideally 10-30s, muted-friendly)</div>
+      <div class="upload-grid" id="uploadGrid"></div>
+    </div>
+
+    <!-- Tab: Location -->
+    <div class="tab-panel" id="tab-location">
+      <div class="field-label">Current Location</div>
+      <div class="status-line" id="currentLocationText">--</div>
+      <button class="secondary-btn" id="changeLocationBtn" style="margin-top:12px;">📍 Change Location</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ========================================================================
+   CONFIG & STATE
+======================================================================== */
+const WEATHER_SCENE_KEYS = ['clear-day','clear-night','clouds-day','clouds-night','rain','thunderstorm','snow','fog'];
+const SCENE_LABELS = { 'clear-day':'☀️ Clear Day','clear-night':'🌙 Clear Night','clouds-day':'⛅ Cloudy Day','clouds-night':'☁️ Cloudy Night','rain':'🌧️ Rain','thunderstorm':'⛈️ Storm','snow':'❄️ Snow','fog':'🌫️ Fog' };
+const WEATHER_QUERIES = { 'clear-day':'sunny sky','clear-night':'starry night sky','clouds-day':'clouds timelapse','clouds-night':'night clouds','rain':'rain window','thunderstorm':'thunderstorm lightning','snow':'snow falling','fog':'foggy forest' };
+
+const weatherCodeMap = {
+  0:{icon:"☀️",desc:"Clear sky",scene:"clear"}, 1:{icon:"🌤️",desc:"Mainly clear",scene:"clear"},
+  2:{icon:"⛅",desc:"Partly cloudy",scene:"clouds"}, 3:{icon:"☁️",desc:"Overcast",scene:"clouds"},
+  45:{icon:"🌫️",desc:"Fog",scene:"fog"}, 48:{icon:"🌫️",desc:"Rime fog",scene:"fog"},
+  51:{icon:"🌦️",desc:"Light drizzle",scene:"rain"}, 53:{icon:"🌦️",desc:"Drizzle",scene:"rain"},
+  55:{icon:"🌧️",desc:"Dense drizzle",scene:"rain"}, 61:{icon:"🌧️",desc:"Light rain",scene:"rain"},
+  63:{icon:"🌧️",desc:"Rain",scene:"rain"}, 65:{icon:"🌧️",desc:"Heavy rain",scene:"rain"},
+  71:{icon:"🌨️",desc:"Light snow",scene:"snow"}, 73:{icon:"🌨️",desc:"Snow",scene:"snow"},
+  75:{icon:"❄️",desc:"Heavy snow",scene:"snow"}, 80:{icon:"🌦️",desc:"Rain showers",scene:"rain"},
+  81:{icon:"🌧️",desc:"Rain showers",scene:"rain"}, 82:{icon:"⛈️",desc:"Violent showers",scene:"thunderstorm"},
+  95:{icon:"⛈️",desc:"Thunderstorm",scene:"thunderstorm"}, 96:{icon:"⛈️",desc:"Thunderstorm+hail",scene:"thunderstorm"},
+  99:{icon:"⛈️",desc:"Severe storm",scene:"thunderstorm"}
+};
+function getWeatherInfo(code){ return weatherCodeMap[code] || {icon:"🌡️",desc:"Unknown",scene:"clear"}; }
+function resolveSceneKey(scene, isDay){
+  if(scene==='clear') return isDay ? 'clear-day' : 'clear-night';
+  if(scene==='clouds') return isDay ? 'clouds-day' : 'clouds-night';
+  return scene;
+}
+
+const SETTINGS_KEY = 'weatherAppSettings_v1';
+const LOCATION_KEY = 'weatherAppLocation_v1';
+let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { bgSource:'canvas', coverrApiKey:'' };
+let savedLocation = JSON.parse(localStorage.getItem(LOCATION_KEY)) || null;
+let customVideoURLs = {}; // sceneKey -> objectURL (loaded from IndexedDB at startup)
+
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+function saveLocation(loc){ savedLocation = loc; localStorage.setItem(LOCATION_KEY, JSON.stringify(loc)); }
+
+/* ========================================================================
+   INDEXEDDB — persist uploaded videos across reloads
+======================================================================== */
+const DB_NAME='weatherAppDB', STORE='videos';
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req = indexedDB.open(DB_NAME,1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(STORE);
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = e => rej(e.target.error);
+  });
+}
+async function idbSet(key, blob){
+  const db = await openDB();
+  return new Promise((res,rej)=>{
+    const tx = db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).put(blob,key);
+    tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error);
+  });
+}
+async function idbGet(key){
+  const db = await openDB();
+  return new Promise((res,rej)=>{
+    const tx = db.transaction(STORE,'readonly');
+    const r = tx.objectStore(STORE).get(key);
+    r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+}
+async function idbDelete(key){
+  const db = await openDB();
+  return new Promise((res)=>{
+    const tx = db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).delete(key);
+    tx.oncomplete=()=>res();
+  });
+}
+async function loadAllCustomVideos(){
+  for(const key of WEATHER_SCENE_KEYS){
+    try{
+      const blob = await idbGet(key);
+      if(blob){ customVideoURLs[key] = URL.createObjectURL(blob); }
+    }catch(e){ console.warn('IDB load failed for', key); }
+  }
+  buildUploadGrid();
+}
+
+/* ========================================================================
+   CANVAS FALLBACK ANIMATION
+======================================================================== */
+const canvas=document.getElementById('bg-canvas'), ctx=canvas.getContext('2d');
+let W,H,particles=[],fallbackScene=null,lightningOpacity=0,lightningTimer=0;
+function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;}
+addEventListener('resize',resize); resize();
+function createParticles(type){
+  particles=[];
+  if(type==='rain'||type==='thunderstorm'){ for(let i=0;i<120;i++) particles.push({x:Math.random()*W,y:Math.random()*H,len:Math.random()*22+12,speed:Math.random()*9+9,opacity:Math.random()*0.4+0.35}); }
+  else if(type==='snow'){ for(let i=0;i<130;i++) particles.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*3+1.5,speed:Math.random()*1+0.6,angle:Math.random()*6.28}); }
+  else if(type==='clouds'||type==='fog'){ for(let i=0;i<6;i++) particles.push({x:Math.random()*W,y:Math.random()*H*0.5,r:Math.random()*160+120,speed:Math.random()*0.35+0.15,opacity:Math.random()*0.14+0.07}); }
+  else if(type==='clear-night'){ for(let i=0;i<110;i++) particles.push({x:Math.random()*W,y:Math.random()*H*0.65,r:Math.random()*1.6+0.4,twinkleSpeed:Math.random()*0.02+0.008,phase:Math.random()*6.28}); }
+}
+function drawFallback(){
+  ctx.clearRect(0,0,W,H);
+  if(fallbackScene==='rain'||fallbackScene==='thunderstorm'){
+    ctx.strokeStyle='rgba(174,194,224,0.65)';
+    particles.forEach(p=>{ ctx.globalAlpha=p.opacity; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-2,p.y+p.len); ctx.lineWidth=1.4; ctx.stroke(); p.y+=p.speed; p.x-=1; if(p.y>H){p.y=-20;p.x=Math.random()*W;} });
+    ctx.globalAlpha=1;
+    if(fallbackScene==='thunderstorm'){ lightningTimer++; if(lightningTimer>Math.random()*220+120){lightningOpacity=1;lightningTimer=0;} if(lightningOpacity>0){ctx.fillStyle=`rgba(255,255,255,${lightningOpacity*0.45})`;ctx.fillRect(0,0,W,H);lightningOpacity-=0.06;} }
+  } else if(fallbackScene==='snow'){
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    particles.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.28); ctx.fill(); p.y+=p.speed; p.x+=Math.sin(p.angle)*0.6; p.angle+=0.02; if(p.y>H){p.y=-10;p.x=Math.random()*W;} });
+  } else if(fallbackScene==='clouds'||fallbackScene==='fog'){
+    particles.forEach(p=>{ const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r); g.addColorStop(0,`rgba(255,255,255,${p.opacity})`); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.28); ctx.fill(); p.x+=p.speed; if(p.x-p.r>W)p.x=-p.r; });
+  } else if(fallbackScene==='clear-night'){
+    particles.forEach(p=>{ p.phase+=p.twinkleSpeed; const a=(Math.sin(p.phase)+1)/2; ctx.fillStyle=`rgba(255,255,255,${a})`; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.28); ctx.fill(); });
+  }
+  requestAnimationFrame(drawFallback);
+}
+drawFallback();
+
+const bgGradients={ 'clear-day':'linear-gradient(135deg,#4facfe,#00c6fb,#a1c4fd)','clear-night':'linear-gradient(135deg,#0f2027,#203a43,#2c5364)','clouds-day':'linear-gradient(135deg,#757f9a,#b8c1d1,#d7dde8)','clouds-night':'linear-gradient(135deg,#232526,#3a3d42,#4a4e57)','rain':'linear-gradient(135deg,#2c3e50,#3a6073,#16222a)','snow':'linear-gradient(135deg,#5c7ea3,#83a4d4,#b6cbe8)','fog':'linear-gradient(135deg,#606c88,#3f4c6b)','thunderstorm':'linear-gradient(135deg,#0f0c29,#302b63,#24243e)' };
+
+function enableCanvasFallback(sceneKeyForGradient, particleType){
+  document.body.classList.add('video-fallback');
+  document.body.style.background = bgGradients[sceneKeyForGradient] || bgGradients['clear-day'];
+  document.body.style.backgroundSize='400% 400%';
+  if(particleType!==fallbackScene){ fallbackScene = particleType==='clear-day' ? null : particleType; if(fallbackScene) createParticles(fallbackScene); else particles=[]; }
+}
+
+/* ========================================================================
+   VIDEO ENGINE (custom uploads + coverr) with crossfade
+======================================================================== */
+const videoA = document.getElementById('bgVideoA');
+const videoB = document.getElementById('bgVideoB');
+const coverrPools = {};
+let coverrRotateTimer = null;
+let currentSceneKey = null;
+
+function playVideoSrc(src){
+  document.body.classList.remove('video-fallback');
+  const standby = videoA.classList.contains('active') ? videoB : videoA;
+  const active  = videoA.classList.contains('active') ? videoA : videoB;
+  standby.src = src;
+  standby.load();
+  standby.oncanplay = () => {
+    standby.play().catch(()=>{});
+    standby.classList.add('active');
+    active.classList.remove('active');
+  };
+  standby.onerror = () => console.warn('Video failed to load:', src);
+}
+
+async function fetchCoverrPool(sceneKey){
+  if(!settings.coverrApiKey) return [];
+  const query = WEATHER_QUERIES[sceneKey];
+  const cacheKey = sceneKey;
+  try{
+    const url = `https://api.coverr.co/videos?api_key=${settings.coverrApiKey}&query=${encodeURIComponent(query)}&page=1&page_size=20`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    const hits = data.hits || data.videos || data.results || [];
+    const urls = hits.map(v => v?.urls?.mp4 || v?.urls?.mp4_download || v?.download_url || v?.source?.mp4).filter(Boolean);
+    coverrPools[cacheKey] = urls;
+    updateCoverrStatus(`✅ ${urls.length} clips loaded for "${query}"`, 'ok');
+    return urls;
+  }catch(err){
+    console.warn('Coverr fetch failed:', err.message);
+    updateCoverrStatus(`⚠️ Coverr fetch failed: ${err.message}`, 'err');
+    return [];
+  }
+}
+
+function updateCoverrStatus(msg, cls){
+  const el = document.getElementById('coverrStatus');
+  el.textContent = msg;
+  el.className = 'status-line ' + (cls||'');
+}
+
+async function applyBackgroundForScene(sceneKey){
+  currentSceneKey = sceneKey;
+  clearInterval(coverrRotateTimer);
+
+  // Priority 1: user's uploaded video
+  if(settings.bgSource === 'upload' && customVideoURLs[sceneKey]){
+    playVideoSrc(customVideoURLs[sceneKey]);
+    document.getElementById('videoBadge').textContent = `📤 Using your uploaded video — ${SCENE_LABELS[sceneKey]}`;
+    return;
+  }
+
+  // Priority 2: Coverr API
+  if(settings.bgSource === 'coverr' && settings.coverrApiKey){
+    document.getElementById('videoBadge').textContent = `🎬 Fetching Coverr clips for ${SCENE_LABELS[sceneKey]}…`;
+    let pool = coverrPools[sceneKey];
+    if(!pool || pool.length===0) pool = await fetchCoverrPool(sceneKey);
+    if(pool && pool.length>0){
+      playVideoSrc(pool[Math.floor(Math.random()*pool.length)]);
+      document.getElementById('videoBadge').textContent = `🎬 Coverr live · ${SCENE_LABELS[sceneKey]} · refreshes every 2 min`;
+      // refresh a NEW clip every 2 minutes
+      coverrRotateTimer = setInterval(async ()=>{
+        const freshPool = await fetchCoverrPool(sceneKey); // re-fetch pool every cycle
+        if(freshPool.length>0) playVideoSrc(freshPool[Math.floor(Math.random()*freshPool.length)]);
+      }, 2*60*1000);
+      return;
+    }
+    // fall through to canvas if coverr returned nothing
+  }
+
+  // Priority 3: canvas fallback
+  const particleType = sceneKey.includes('clouds') ? 'clouds' : sceneKey;
+  enableCanvasFallback(sceneKey, particleType);
+  document.getElementById('videoBadge').textContent = '🎨 Animated background';
+}
+
+/* ========================================================================
+   LOCATION HANDLING
+======================================================================== */
+function showLocationError(msg){
+  const el = document.getElementById('locationError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function reverseGeocode(lat, lon){
+  try{
+    const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+    const data = await res.json();
+    return { name: data.city || data.locality || data.principalSubdivision || 'Your Location', country_code: data.countryCode || '' };
+  }catch(e){
+    return { name: 'Your Location', country_code: '' };
+  }
+}
+
+document.getElementById('useLocationBtn').onclick = () => {
+  document.getElementById('locationError').style.display='none';
+  if(!navigator.geolocation){ showLocationError('Geolocation is not supported by your browser. Please search a city instead.'); return; }
+  document.getElementById('useLocationBtn').textContent = 'Detecting…';
+  navigator.geolocation.getCurrentPosition(async (pos)=>{
+    const { latitude, longitude } = pos.coords;
+    const place = await reverseGeocode(latitude, longitude);
+    saveLocation({ lat: latitude, lon: longitude, name: place.name, country_code: place.country_code });
+    startApp();
+  }, (err)=>{
+    document.getElementById('useLocationBtn').textContent = '📍 Use My Current Location';
+    showLocationError('⚠️ Location permission denied or unavailable. Please search your city manually below.');
+  }, { timeout: 10000 });
+};
+
+document.getElementById('manualCityBtn').onclick = async () => {
+  const city = document.getElementById('manualCityInput').value.trim();
+  if(!city){ showLocationError('Please type a city name.'); return; }
+  document.getElementById('locationError').style.display='none';
+  try{
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+    const data = await res.json();
+    if(!data.results?.length) throw new Error('City not found');
+    const r = data.results[0];
+    saveLocation({ lat: r.latitude, lon: r.longitude, name: r.name, country_code: r.country_code });
+    startApp();
+  }catch(err){
+    showLocationError('⚠️ Could not find that city. Try a different spelling.');
+  }
+};
+
+/* ========================================================================
+   WEATHER FETCH + RENDER
+======================================================================== */
+async function fetchWeather(lat, lon){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure,is_day&hourly=temperature_2m,weather_code&timezone=auto`;
+  const res = await fetch(url);
+  return res.json();
+}
+function formatHour(iso){ return new Date(iso).toLocaleTimeString([], {hour:'numeric'}); }
+
+async function loadWeather(){
+  document.getElementById('weatherView').classList.add('hidden');
+  document.getElementById('loaderCard').classList.remove('hidden');
+  try{
+    const { lat, lon, name, country_code } = savedLocation;
+    const data = await fetchWeather(lat, lon);
+    const cur = data.current;
+    const info = getWeatherInfo(cur.weather_code);
+    const isDay = cur.is_day === 1;
+
+    document.getElementById('cityName').textContent = `${name}${country_code ? ', '+country_code : ''}`;
+    document.getElementById('dateNow').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
+    document.getElementById('temp').textContent = `${Math.round(cur.temperature_2m)}°`;
+    document.getElementById('weatherIcon').textContent = info.icon;
+    document.getElementById('weatherDesc').textContent = info.desc;
+    document.getElementById('feelsLike').textContent = `Feels like ${Math.round(cur.apparent_temperature)}°`;
+    document.getElementById('humidity').textContent = `${cur.relative_humidity_2m}%`;
+    document.getElementById('wind').textContent = `${Math.round(cur.wind_speed_10m)} km/h`;
+    document.getElementById('pressure').textContent = `${Math.round(cur.surface_pressure)} hPa`;
+
+    const nowIndex = data.hourly.time.findIndex(t => new Date(t) >= new Date());
+    const box = document.getElementById('hourlyScroll'); box.innerHTML='';
+    for(let i=nowIndex;i<nowIndex+12 && i<data.hourly.time.length;i++){
+      const h = getWeatherInfo(data.hourly.weather_code[i]);
+      box.innerHTML += `<div class="hour-item"><div class="hour-time">${i===nowIndex?'Now':formatHour(data.hourly.time[i])}</div><div class="hour-icon">${h.icon}</div><div class="hour-temp">${Math.round(data.hourly.temperature_2m[i])}°</div></div>`;
+    }
+    document.getElementById('updatedAt').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+    document.getElementById('currentLocationText').textContent = `${name}${country_code ? ', '+country_code : ''} (${lat.toFixed(2)}, ${lon.toFixed(2)})`;
+
+    const sceneKey = resolveSceneKey(info.scene, isDay);
+    applyBackgroundForScene(sceneKey);
+
+    document.getElementById('loaderCard').classList.add('hidden');
+    document.getElementById('weatherView').classList.remove('hidden');
+  }catch(err){
+    document.getElementById('loaderCard').innerHTML = `<div class="loader"><span>⚠️ ${err.message}</span></div>`;
+    console.error(err);
+  }
+}
+
+/* ========================================================================
+   SETTINGS MODAL LOGIC
+======================================================================== */
+function initSettingsUI(){
+  // radio selection
+  document.querySelectorAll('.radio-option').forEach(opt=>{
+    opt.querySelector('input').checked = (opt.dataset.value === settings.bgSource);
+    opt.classList.toggle('selected', opt.dataset.value === settings.bgSource);
+    opt.onclick = () => {
+      settings.bgSource = opt.dataset.value;
+      saveSettings();
+      document.querySelectorAll('.radio-option').forEach(o=>{
+        o.classList.toggle('selected', o.dataset.value === settings.bgSource);
+        o.querySelector('input').checked = (o.dataset.value === settings.bgSource);
+      });
+      if(currentSceneKey) applyBackgroundForScene(currentSceneKey);
+    };
+  });
+
+  document.getElementById('coverrKeyInput').value = settings.coverrApiKey || '';
+  if(settings.coverrApiKey) updateCoverrStatus('✅ Key saved.', 'ok');
+
+  document.getElementById('saveCoverrKey').onclick = () => {
+    settings.coverrApiKey = document.getElementById('coverrKeyInput').value.trim();
+    saveSettings();
+    updateCoverrStatus(settings.coverrApiKey ? '✅ Key saved. Switch source to "Coverr Videos" to use it.' : 'Key cleared.', settings.coverrApiKey?'ok':'');
+    if(currentSceneKey && settings.bgSource==='coverr') applyBackgroundForScene(currentSceneKey);
+  };
+
+  // tabs
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.onclick = () => {
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+    };
+  });
+
+  document.getElementById('changeLocationBtn').onclick = () => {
+    document.getElementById('settingsModal').classList.add('hidden');
+    document.getElementById('weatherView').classList.add('hidden');
+    document.getElementById('locationScreen').classList.remove('hidden');
+  };
+}
+
+function buildUploadGrid(){
+  const grid = document.getElementById('uploadGrid');
+  grid.innerHTML = '';
+  WEATHER_SCENE_KEYS.forEach(key=>{
+    const hasVideo = !!customVideoURLs[key];
+    const slot = document.createElement('div');
+    slot.className = 'upload-slot' + (hasVideo ? ' has-video':'');
+    slot.innerHTML = `
+      <button class="remove-btn" data-key="${key}">&times;</button>
+      ${hasVideo ? `<video src="${customVideoURLs[key]}" muted loop autoplay playsinline></video>` : ''}
+      <div class="slot-label">${SCENE_LABELS[key]}</div>
+      <label class="upload-btn">${hasVideo ? 'Replace' : 'Upload'}
+        <input type="file" accept="video/mp4,video/webm" data-key="${key}">
+      </label>
+    `;
+    grid.appendChild(slot);
+  });
+
+  grid.querySelectorAll('input[type=file]').forEach(input=>{
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const key = e.target.dataset.key;
+      await idbSet(key, file);
+      if(customVideoURLs[key]) URL.revokeObjectURL(customVideoURLs[key]);
+      customVideoURLs[key] = URL.createObjectURL(file);
+      buildUploadGrid();
+      if(currentSceneKey === key && settings.bgSource === 'upload') applyBackgroundForScene(key);
+    };
+  });
+
+  grid.querySelectorAll('.remove-btn').forEach(btn=>{
+    btn.onclick = async (e) => {
+      const key = e.target.dataset.key;
+      await idbDelete(key);
+      if(customVideoURLs[key]) URL.revokeObjectURL(customVideoURLs[key]);
+      delete customVideoURLs[key];
+      buildUploadGrid();
+      if(currentSceneKey === key && settings.bgSource === 'upload') applyBackgroundForScene(key);
+    };
+  });
+}
+
+document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
+document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
+document.getElementById('settingsModal').onclick = (e) => { if(e.target.id==='settingsModal') e.currentTarget.classList.add('hidden'); };
+document.getElementById('refreshBtn').onclick = () => loadWeather();
+
+/* ========================================================================
+   APP STARTUP
+======================================================================== */
+async function startApp(){
+  document.getElementById('locationScreen').classList.add('hidden');
+  await loadAllCustomVideos();
+  initSettingsUI();
+  await loadWeather();
+  setInterval(loadWeather, 10 * 60 * 1000); // refresh weather every 10 min
+}
+
+// on page load: skip location screen if we already have a saved one
+window.addEventListener('DOMContentLoaded', () => {
+  if(savedLocation && savedLocation.lat){
+    document.getElementById('locationScreen').classList.add('hidden');
+    startApp();
+  }
+});
+</script>
 </body>
 </html>
